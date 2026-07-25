@@ -455,3 +455,71 @@ module.exports = Review;
 - 🔹 **محدودیت اعتبارسنج‌ها (`Validators`):** متدهای اعتبارسنجی ساده مانند `min` و `max` فقط برای داده‌های از نوع عددی (`Number`) در `Mongoose` کارایی دارند.
 
 - 🔹 **پیکربندی خروجی‌ها (`JSON & Object Outputs`):** تنظیمات `toJSON` و `toObject` با مقدار `{ virtuals: true }` تضمین می‌کند که فیلدهای محاسباتی و مجازی حتماً در خروجی نهایی داده‌ها به کاربر نمایش داده شوند.
+
+## فصل پنجم: ایجاد اندپوینت‌های پایه نظرات (`Routes & Controllers`)
+
+این فصل شامل تکرار ساختارهای قبلی `MVC` برای اندپوینت‌های عمومی و محافظت‌شده‌ی نظرات است.
+
+---
+
+### ۱. پیاده‌سازی کنترلر (`controllers/reviewController.js`)
+
+- 🔹 **متد دریافت نظرات (`getAllReviews`):** فراخوانی `Review.find()` برای دریافت تمام نظرات و ارسال خروجی با کد 200.
+- 🔹 **متد ایجاد نظر (`createReview`):** دریافت داده‌ها از `req.body` و ذخیره با `Review.create()` با کد 201.
+
+```javascript
+const Review = require('../models/reviewModel');
+const catchAsync = require('./../utils/catchAsync');
+
+exports.getAllReviews = catchAsync(async (req, res, next) => {
+  const reviews = await Review.find();
+
+  res.status(200).json({
+    status: 'success',
+    results: reviews.length,
+    data: { reviews },
+  });
+});
+
+exports.createReview = catchAsync(async (req, res, next) => {
+  const newReview = await Review.create(req.body);
+
+  res.status(201).json({
+    status: 'success',
+    data: { review: newReview },
+  });
+});
+```
+
+---
+
+### ۲. تعریف مسیرها و لایه‌های امنیتی (`routes/reviewRoutes.js`)
+
+- 🔹 **مسیر دریافت (`GET /`):** عمومی و بدون نیاز به لاگین.
+- 🔹 **مسیر ایجاد (`POST /`):** دارای دو لایه امنیتی متوالی (`protect` برای تایید توکن `JWT` و `restrictTo('user')` برای محدودسازی دسترسی صرفاً به کاربران عادی).
+
+```javascript
+const express = require('express');
+const reviewController = require('./../controllers/reviewController');
+const authController = require('./../controllers/authController');
+
+const router = express.Router();
+
+router
+  .route('/')
+  .get(reviewController.getAllReviews)
+  .post(
+    authController.protect,
+    authController.restrictTo('user'),
+    reviewController.createReview,
+  );
+
+module.exports = router;
+```
+
+---
+
+### ۳. نصب روتر و نکات تست (`App & Postman`)
+
+- 🔹 **اتصال روتر در `app.js`:** اتصال `reviewRoutes` به مسیر پایه `/api/v1/reviews`.
+- 🔹 **نکات ارسال درخواست `POST`:** ارسال توکن لاگین در بخش `Bearer Token` و قرار دادن دستی شناسه‌های `tour` و `user` در بدنه درخواست (کد `JSON`).
