@@ -212,7 +212,6 @@ Tour Model (Embedding Strategy)
 برای درک این حالت، می‌توان از یک `Middleware` در سطح `Pre-Save` استفاده کرد:
 
 ```javascript
-// کد آزمایشی برای درک مکانیزم (در پروژه نهایی استفاده نمی‌شود)
 tourSchema.pre('save', async function (next) {
   const guidesPromises = this.guides.map(async (id) => await User.findById(id));
   this.guides = await Promise.all(guidesPromises);
