@@ -14,10 +14,18 @@ dotenv.config({ path: './config.env' });
 
 const app = require('./app');
 
-const DB = process.env.DATABASE.replace(
-  '<PASSWORD>',
-  process.env.DATABASE_PASSWORD,
-);
+// to connect to local
+// const DB = process.env.DATABASE_LOCAL;
+// mongoose.connect(DB).then(() => {
+//   console.log('✅ DB connected');
+// });
+
+const DB =
+  process.env.NODE_ENV === 'development'
+    ? process.env.DATABASE_LOCAL
+    : process.env.DATABASE.replace('<PASSWORD>', process.env.DATABASE_PASSWORD);
+
+mongoose.connect(DB);
 
 mongoose
   .connect(DB, {

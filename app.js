@@ -3,7 +3,7 @@ const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
-const xss = require('express-xss-sanitizer');
+const { xss } = require('express-xss-sanitizer');
 const hpp = require('hpp');
 
 const AppError = require('./utils/appError');
