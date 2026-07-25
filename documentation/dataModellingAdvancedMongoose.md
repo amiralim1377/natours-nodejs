@@ -169,4 +169,4 @@
 🔄 **3. مدیریت هوشمند نقش‌ها (`Tour Guides`)**
 با وجود اینکه ارتباط راهنماها و تورها از نوع `Few-to-Few` است (که ذاتاً کاندیدِ خوبی برای اِمبِد شدن است)، اما به دلیل ماهیتِ کاربریِ راهنماها (نیاز مکرر به لاگین کردن و تغییر مشخصات شخصی)، آیدیِ آن‌ها در قالب یک آرایه داخل داکیومنتِ تور (`Child Referencing`) ذخیره شد تا استقلالشان حفظ شود.
 
-![دیاگرام معماری دیتابیس](https://github.com/amiralim1377/natours/blob/main/public/img/documentation/Capture.JPG?raw=true)
+<img width="1641" height="809" alt="Capture" src="https://github.com/user-attachments/assets/cc8db109-2cd3-4a79-9167-b4d061ec9352" />
