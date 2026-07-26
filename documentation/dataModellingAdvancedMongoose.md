@@ -249,39 +249,18 @@ Image
 
 ```text
 1. Reviews (Parent Referencing)
-
-[ ⭐ Review ]
-    ──(user_id: ذخیره ObjectId مربوط به User)──>
-[ 👤 User ]
-
-[ ⭐ Review ]
-    ──(tour_id: ذخیره ObjectId مربوط به Tour)──>
-[ 🏕️ Tour ]
-
+   [ ⭐ Review ] ──(user_id)──> [ 👤 User ]
+   [ ⭐ Review ] ──(tour_id)──> [ 🏕️ Tour ]
 
 2. Bookings (Parent Referencing + Intermediate)
-
-[ 💳 Booking ]
-    ──(user_id: ذخیره ObjectId مربوط به User)──>
-[ 👤 User ]
-
-[ 💳 Booking ]
-    ──(tour_id: ذخیره ObjectId مربوط به Tour)──>
-[ 🏕️ Tour ]
-
+   [ 💳 Booking ] ──(user_id)──> [ 👤 User ]
+   [ 💳 Booking ] ──(tour_id)──> [ 🏕️ Tour ]
 
 3. Guides (Child Referencing)
-
-[ 🏕️ Tour ]
-    ──(guides: [guideId1, guideId2] ذخیره ObjectId مربوط به Guides)──>
-[ 👤 Guides (Users) ]
-
+   [ 🏕️ Tour ] ──(guides: [id1, id2])──> [ 👤 Guides (Users) ]
 
 4. Locations (Embedding)
-
-[ 🏕️ Tour ]
-    ══(ذخیره کامل اطلاعات Location داخل Tour)══>
-[ 📍 Location ]
+   [ 🏕️ Tour ] ══(Embeds complete data)══> [ 📍 Locations ]
 
 ```
 
