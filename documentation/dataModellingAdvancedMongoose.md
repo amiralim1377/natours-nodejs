@@ -958,7 +958,6 @@ GET /tours/234fad4/reviews/9488bca
 
 ```javascript
 // در فایل reviewController.js
-
 exports.createNewReview = catchAsync(async (req, res, next) => {
   // اگر شناسه تور در بادی نبود، آن را از پارامترهای URL بگیر
   if (!req.body.tour) req.body.tour = req.params.tourId;
@@ -975,7 +974,6 @@ exports.createNewReview = catchAsync(async (req, res, next) => {
 
 ```javascript
 // پیاده‌سازی کثیف در فایل tourRoutes.js (فقط برای تست اولیه)
-
 router
   .route('/:tourId/reviews')
   .post(
@@ -1000,7 +998,6 @@ router
 
 ```javascript
 // در فایل tourRoutes.js
-
 const reviewRouter = require('./../routes/reviewRoutes');
 
 // هدایت درخواست‌های مربوط به نظرات به روتر تخصصی خودش
@@ -1014,7 +1011,6 @@ router.use('/:tourId/reviews', reviewRouter);
 ```javascript
 // در فایل reviewRoutes.js
 // فعال‌سازی ادغام پارامترها برای دریافت tourId از روتر پدر
-
 const router = express.Router({ mergeParams: true });
 
 router
