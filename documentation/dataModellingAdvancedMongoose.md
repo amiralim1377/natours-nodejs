@@ -245,24 +245,67 @@ Image
 
 ### 🗺️ دیاگرام بصری ارتباطات در دیتابیس
 
-در نمودار زیر، فلش‌ها `──>` نشان می‌دهند که **کدام موجودیت، آیدیِ (`ObjectId`) موجودیت دیگر را در خود ذخیره کرده است**. (خطوط دوگانه `══>` نشان‌دهنده‌ی جاسازی کامل است).
+در نمودار زیر، فلش‌ها `──>` نشان می‌دهند که **کدام موجودیت، آیدی (`ObjectId`) موجودیت دیگر را ذخیره کرده است**.
+
+- سمت چپ فلش = موجودیتی که `ObjectId` را داخل خود نگه می‌دارد.
+- سمت راست فلش = موجودیتی که آیدی آن ذخیره شده است.
+
+خطوط دوگانه `══>` نشان‌دهنده‌ی **Embedding (جاسازی کامل داده)** هستند.
 
 ```text
 1. Reviews (Parent Referencing)
-   [ ⭐ Review ] ──(user_id)──> [ 👤 User ]
-   [ ⭐ Review ] ──(tour_id)──> [ 🏕️ Tour ]
+
+[ ⭐ Review ]
+      |
+      | Review ذخیره می‌کند: user_id
+      | (ObjectId مربوط به User)
+      ↓
+[ 👤 User ]
+
+[ ⭐ Review ]
+      |
+      | Review ذخیره می‌کند: tour_id
+      | (ObjectId مربوط به Tour)
+      ↓
+[ 🏕️ Tour ]
+
 
 2. Bookings (Parent Referencing + Intermediate)
-   [ 💳 Booking ] ──(user_id)──> [ 👤 User ]
-   [ 💳 Booking ] ──(tour_id)──> [ 🏕️ Tour ]
+
+[ 💳 Booking ]
+      |
+      | Booking ذخیره می‌کند: user_id
+      | (ObjectId مربوط به User)
+      ↓
+[ 👤 User ]
+
+[ 💳 Booking ]
+      |
+      | Booking ذخیره می‌کند: tour_id
+      | (ObjectId مربوط به Tour)
+      ↓
+[ 🏕️ Tour ]
+
 
 3. Guides (Child Referencing)
-   [ 🏕️ Tour ] ──(guides: [id1, id2])──> [ 👤 Guides (Users) ]
+
+[ 🏕️ Tour ]
+      |
+      | Tour ذخیره می‌کند:
+      | guides: [guideId1, guideId2]
+      | (ObjectId مربوط به Guide/User)
+      ↓
+[ 👤 Guides (Users) ]
+
 
 4. Locations (Embedding)
-   [ 🏕️ Tour ] ══(Embeds complete data)══> [ 📍 Locations ]
 
-```
+[ 🏕️ Tour ]
+      |
+      | Tour شامل اطلاعات کامل Location است
+      | (بدون ذخیره ObjectId جداگانه)
+      ═══════════════════════>
+[ 📍 Location ]
 
 ---
 
@@ -312,3 +355,4 @@ Image
 با وجود اینکه ارتباط راهنماها و تورها از نوع `Few-to-Few` است (که ذاتاً کاندیدِ خوبی برای اِمبِد شدن است)، اما به دلیل ماهیتِ کاربریِ راهنماها (نیاز مکرر به لاگین کردن و تغییر مشخصات شخصی)، آیدیِ آن‌ها در قالب یک آرایه داخل داکیومنتِ تور (`Child Referencing`) ذخیره شد تا استقلالشان حفظ شود.
 
 <img width="1641" height="809" alt="Capture" src="https://github.com/user-attachments/assets/cc8db109-2cd3-4a79-9167-b4d061ec9352" />
+```
