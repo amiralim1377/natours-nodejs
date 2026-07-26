@@ -733,8 +733,6 @@ router
 module.exports = router;
 ```
 
----
-
 ### ۳. نصب روتر و نکات تست (`App & Postman`)
 
 - 🔹 **اتصال روتر در `app.js`:** اتصال `reviewRoutes` به مسیر پایه `/api/v1/reviews`.
