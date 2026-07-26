@@ -122,6 +122,13 @@ tourSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7;
 });
 
+// Virtual populate
+tourSchema.virtual('reviews', {
+  ref: 'Review',
+  foreignField: 'tour',
+  localField: '_id',
+});
+
 // documnet middleware: runs before just .save() and create() method. keep it in mind
 tourSchema.pre('save', function (next) {
   this.slug = slugify(this.name, { lower: true });
