@@ -622,7 +622,7 @@ tourSchema.pre(/^find/, function (next) {
 
 برای اینکه ویژگی‌های مجازی (فیلدهایی که در دیتابیس ذخیره نمی‌شوند اما محاسبه می‌شوند) در خروجی‌های `JSON` و آبجکت‌ها نمایش داده شوند، گزینه‌های مربوطه به اسکیما اضافه می‌شوند:
 
-```javascript
+```typescript
 const mongoose = require('mongoose');
 const Tour = require('./tourModel');
 
@@ -657,11 +657,11 @@ const reviewSchema = new mongoose.Schema(
     toObject: { virtuals: true },
   },
 );
-
 const Review = mongoose.model('Review', reviewSchema);
-
 module.exports = Review;
 ```
+
+---
 
 ### ۴. نکات کلیدی و تله‌های معماری (`Key Points & Pitfalls`)
 
