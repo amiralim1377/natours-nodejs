@@ -920,28 +920,28 @@ reviewSchema.pre(/^find/, function (next) {
 
 در این فصل قصد داریم مسیرهای تودرتو (`Nested Routes`) را بررسی کنیم، متوجه شویم چرا به آن‌ها نیاز داریم و چگونه می‌توانیم با استفاده از ویژگی‌های پیشرفته در `Express` آن‌ها را به صورت بهینه و تمیز پیاده‌سازی کنیم.
 
-### ۱. مفهوم و کاربرد مسیرهای تودرتو
+### 1. مفهوم و کاربرد مسیرهای تودرتو
 
 تا به اینجا، برای ایجاد یک نظر (`Review`) جدید، مجبور بودیم شناسه‌ی تور (`Tour ID`) و شناسه‌ی کاربر (`User ID`) را به صورت دستی در بدنه درخواست (`Request Body`) وارد کنیم. این روش برای تست در طول توسعه مناسب است، اما در دنیای واقعی یک ایده بد محسوب می‌شود.
 
 در یک برنامه واقعی:
 
-- شناسه‌ی کاربر باید به صورت خودکار از کاربرِ در حالِ لاگین (`Logged-in User`) خوانده شود.
+- 🔹 شناسه‌ی کاربر باید به صورت خودکار از کاربرِ در حالِ لاگین (`Logged-in User`) خوانده شود.
 
-- شناسه‌ی تور باید مستقیماً از داخل آدرسِ درخواست (`URL`) به دست آید.
+- 🔹 شناسه‌ی تور باید مستقیماً از داخل آدرسِ درخواست (`URL`) به دست آید.
 
 اینجاست که مسیرهای تودرتو وارد عمل می‌شوند. وقتی بین دو منبع داده (`Resource`) ارتباط والد و فرزندی شفافی وجود دارد، استفاده از این مسیرها ضروری است (در اینجا نظرات فرزندِ تورها هستند).
 
 **ساختار استاندارد مسیرهای تودرتو در API:**
 
 ```text
-// آدرس برای ساخت یک نظر جدید برای یک تور خاص
+// POST request for a new review on a specific tour
 POST /tours/234fad4/reviews
 
-// آدرس برای دریافت تمام نظرات مربوط به یک تور خاص
+// GET request for all reviews on a specific tour
 GET /tours/234fad4/reviews
 
-// آدرس برای دریافت یک نظر خاص از یک تور خاص
+// GET request for a specific review on a specific tour
 GET /tours/234fad4/reviews/9488bca
 
 ```
@@ -950,19 +950,19 @@ GET /tours/234fad4/reviews/9488bca
 
 ---
 
-### ۲. پیاده‌سازی اولیه (روش غیراستاندارد)
+### 2. پیاده‌سازی اولیه (روش غیراستاندارد)
 
 ابتدا باید کنترلر نظرات را برای پذیرش اطلاعات از URL و میدل‌ور احراز هویت، به‌روزرسانی کنیم.
 
 > 💡 **نکته طلایی:** ما این امکان را همچنان حفظ می‌کنیم که اگر پارامترها در بادی درخواست وجود داشتند، از آن‌ها استفاده شود (این کار برای تست کردن عالی است)؛ وگرنه به صورت خودکار آن‌ها را از URL و کاربر لاگین‌شده پر می‌کنیم.
 
 ```javascript
-// در فایل reviewController.js
+// File: reviewController.js
 exports.createNewReview = catchAsync(async (req, res, next) => {
-  // اگر شناسه تور در بادی نبود، آن را از پارامترهای URL بگیر
+  // Allow nested routes: Set tour ID from URL if not in body
   if (!req.body.tour) req.body.tour = req.params.tourId;
 
-  // اگر شناسه کاربر در بادی نبود، آن را از کاربر لاگین‌شده بگیر
+  // Allow nested routes: Set user ID from logged-in user if not in body
   if (!req.body.user) req.body.user = req.user.id;
 
   const newReview = await Review.create(req.body);
@@ -973,7 +973,7 @@ exports.createNewReview = catchAsync(async (req, res, next) => {
 در پیاده‌سازی اولیه، مسیر زیر را موقتاً داخل فایل روترِ تورها (`Tour Router`) ایجاد کردیم:
 
 ```javascript
-// پیاده‌سازی کثیف در فایل tourRoutes.js (فقط برای تست اولیه)
+// File: tourRoutes.js (Messy Implementation)
 router
   .route('/:tourId/reviews')
   .post(
@@ -988,7 +988,7 @@ router
 
 ---
 
-### ۳. پیاده‌سازی پیشرفته و اصولی با `mergeParams`
+### 3. پیاده‌سازی پیشرفته و اصولی با `mergeParams`
 
 برای حل این کثیفی، باید فایل روترها را از هم جدا کنیم و از یک قابلیت پیشرفته در Express به نام `mergeParams` کمک بگیریم.
 
@@ -997,10 +997,10 @@ router
 در فایل `tourRoutes.js`، به Express می‌گوییم هر زمان درخواستی دریافت کرد که با `/:tourId/reviews` شروع می‌شد، دیگر خودش آن را پردازش نکند، بلکه آن را مستقیماً به روترِ نظرات ارسال کند (`Mounting a Router`).
 
 ```javascript
-// در فایل tourRoutes.js
+// File: tourRoutes.js
 const reviewRouter = require('./../routes/reviewRoutes');
 
-// هدایت درخواست‌های مربوط به نظرات به روتر تخصصی خودش
+// Mount the review router for this specific nested route
 router.use('/:tourId/reviews', reviewRouter);
 ```
 
@@ -1009,8 +1009,8 @@ router.use('/:tourId/reviews', reviewRouter);
 به طور پیش‌فرض، هر روتر در Express فقط و فقط به پارامترهای URL خودش دسترسی دارد. به همین دلیل، روتر نظرات نمی‌تواند به پارامترِ `tourId` که در روترِ تورها تعریف شده است، دسترسی پیدا کند. برای ادغام این پارامترها و ارسال آن‌ها بین روترها، هنگام ساخت روتر، ویژگی `mergeParams` را روی `true` تنظیم می‌کنیم.
 
 ```javascript
-// در فایل reviewRoutes.js
-// فعال‌سازی ادغام پارامترها برای دریافت tourId از روتر پدر
+// File: reviewRoutes.js
+// Enable mergeParams to access tourId from the parent router (tourRouter)
 const router = express.Router({ mergeParams: true });
 
 router
@@ -1029,7 +1029,7 @@ module.exports = router;
 
 اکنون فارغ از اینکه کلاینت به کدام یک از دو آدرس زیر درخواست `POST` بفرستد، سیستم ما دقیقاً یک عملکرد واحد را از یک فایل مشترک اجرا می‌کند و هیچ کد تکراری تولید نمی‌شود:
 
-- `POST /reviews/`
-- `POST /tours/234fad4/reviews/`
+- 🔹 `POST /reviews/`
+- 🔹 `POST /tours/234fad4/reviews/`
 
 وقتی کلاینت به آدرس دوم درخواست می‌دهد، ابتدا روتر تورها (`Tour Router`) آن را دریافت کرده، `tourId` را شناسایی می‌کند و سپس آن را به روتر نظرات (`Review Router`) هدایت می‌کند. در آنجا، به لطفِ `mergeParams`، روتر نظرات می‌تواند شناسه تور را بخواند و آن را در کنترلر ذخیره کند.
