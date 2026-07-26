@@ -93,7 +93,7 @@
 
 ---
 
-### ارتباطات `One-to-Ton` و `Many-to-Many` ➡️ معمولاً `Reference`
+### 2. ارتباطات `One-to-Ton` و `Many-to-Many` ➡️ معمولاً `Reference`
 
 ## 1. One-to-Ton (یک به خیلی زیاد)
 
