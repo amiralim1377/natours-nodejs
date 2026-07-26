@@ -312,8 +312,7 @@ Image
 با وجود اینکه ارتباط راهنماها و تورها از نوع `Few-to-Few` است (که ذاتاً کاندیدِ خوبی برای اِمبِد شدن است)، اما به دلیل ماهیتِ کاربریِ راهنماها (نیاز مکرر به لاگین کردن و تغییر مشخصات شخصی)، آیدیِ آن‌ها در قالب یک آرایه داخل داکیومنتِ تور (`Child Referencing`) ذخیره شد تا استقلالشان حفظ شود.
 
 <img width="1641" height="809" alt="Capture" src="https://github.com/user-attachments/assets/cc8db109-2cd3-4a79-9167-b4d061ec9352" />
-
-````
+---
 
 ## فصل دوم: پیاده‌سازی داده‌های مکانی (`Geospatial-Data`) در `MongoDB`
 
@@ -390,7 +389,7 @@ Tour Model (Embedding Strategy)
                                           ├── { _id: 2, day: 3, type: "Point" }
                                           └── { _id: 3, day: 5, type: "Point" }
 
-````
+```
 
 ---
 
