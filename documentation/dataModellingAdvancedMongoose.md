@@ -663,8 +663,6 @@ const Review = mongoose.model('Review', reviewSchema);
 module.exports = Review;
 ```
 
----
-
 ### ۴. نکات کلیدی و تله‌های معماری (`Key Points & Pitfalls`)
 
 - 🔹 **انتخاب الگو (`Parent Referencing vs Embedded`):** چرا از ارجاع‌پدری استفاده شد؟ چون حجم نظرات نامشخص است و با رشد اپلیکیشن ممکن است بسیار زیاد شود؛ ذخیره آرایه‌های غول‌پیکر از نظرات درون مدل والد یک اشتباه معماری مرگبار است.
