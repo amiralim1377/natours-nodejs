@@ -1,6 +1,7 @@
 const User = require('./../models/userModel');
 const catchAsync = require('./../utils/catchAsync');
 const AppError = require('./../utils/appError');
+const factory = require('./handlerFactory');
 
 const filterObj = (obj, ...allowedFields) => {
   const newObj = {};
@@ -68,21 +69,19 @@ exports.getUser = (req, res) => {
     .status(500)
     .json({ status: 'error', message: 'this route is not yet define' });
 };
-exports.createUser = (req, res) => {
-  res.status(500).json({
-    status: 'error',
-    message: 'This route is not yet defined!',
-  });
-};
 exports.updateUser = (req, res) => {
   res.status(500).json({
     status: 'error',
     message: 'This route is not yet defined!',
   });
 };
-exports.deleteUser = (req, res) => {
+exports.createUser = (req, res) => {
   res.status(500).json({
     status: 'error',
-    message: 'This route is not yet defined!',
+    message: 'This route is not defined! Please use /signup instead',
   });
 };
+
+// Do NOT update passwords with this!
+exports.updateUser = factory.updateOne(User);
+exports.deleteUser = factory.deleteOne(User);
