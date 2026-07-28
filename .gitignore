@@ -59,3 +59,17 @@ logs/
 .stylelintcache
 
 config.env
+
+# Dependencies
+node_modules/
+
+node_modules/
+.cache/
+
+config.env
+.env
+
+public/js/bundle.js
+public/js/bundle.js.map
+
+*.log
