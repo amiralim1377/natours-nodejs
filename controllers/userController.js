@@ -42,9 +42,6 @@ exports.updateMe = catchAsync(async (req, res, next) => {
       user: updatedUser,
     },
   });
-  console.log(req.body);
-  console.log(filteredBody);
-  console.log(updatedUser);
 });
 
 exports.deleteMe = catchAsync(async (req, res, next) => {
