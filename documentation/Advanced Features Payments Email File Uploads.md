@@ -515,3 +515,83 @@ export const updateSettings = async (data, type) => {
            └── 3. ذخیره در مسیر public/img/users و به‌روزرسانی دیتابیس
 
 ```
+
+## فصل 6: آپلود همزمان چندین فایل با فیلدهای مختلف (`Multiple File Uploads`)
+
+اکنون که آپلود و پردازش یک تصویر تکی (پروفایل کاربر) را یاد گرفتیم، زمان آن رسیده که چالش پیچیده‌تری را حل کنیم: آپلود همزمان چندین عکس برای یک موجودیت. در این بخش، می‌خواهیم قابلیت آپلود تصاویر مربوط به تورها (`Tours`) را پیاده‌سازی کنیم.
+
+### 1. تحلیل نیازمندی‌ها در مدل دیتابیس (`Database Schema Analysis`)
+
+قبل از هرگونه کدنویسی، باید بررسی کنیم که در مدل تور (`Tour Model`) به چه نوع تصاویری نیاز داریم. طبق طراحی دیتابیس ما، هر تور به دو بخش تصویری نیاز دارد:
+
+- 🔹 **فیلد `imageCover`:** این فیلد تنها **یک عکس اصلی (کاور)** دریافت می‌کند که به عنوان تصویر سربرگ تور نمایش داده می‌شود.
+- 🔹 **فیلد `images`:** این فیلد یک **آرایه از عکس‌ها** است که تصاویر گالری تور را نگه می‌دارد (معمولاً 3 عکس برای نمایش در بخش جزئیات تور).
+
+### 2. راه‌اندازی میدل‌ور آپلود (`Multer Configuration`)
+
+درست مانند کاری که برای کاربران کردیم، کدهای پیکربندی `Multer` (شامل `memoryStorage` و `multerFilter`) را به فایل `tourController.js` منتقل می‌کنیم تا از حافظه موقت و فیلترهای امنیتی تصاویر بهره ببریم. اما تفاوت اصلی در نحوه فراخوانی متد آپلود است.
+
+> 💡 **نکته طلایی معماری در `Multer`:**
+> پکیج `Multer` برای دریافت فایل‌ها، سه متد مختلف را بر اساس نیاز ما ارائه می‌دهد:
+>
+> 1. متد `upload.single('field')`: فقط زمانی استفاده می‌شود که تنها **یک فایل** از **یک فیلد مشخص** ارسال شود (تولید آبجکت `req.file`).
+> 2. متد `upload.array('field', maxCount)`: زمانی استفاده می‌شود که **چندین فایل** از طریق **یک فیلد واحد** ارسال شوند (تولید آرایه‌ی `req.files`).
+> 3. متد `upload.fields([{}])`: این کامل‌ترین و منعطف‌ترین متد است و زمانی استفاده می‌شود که ترکیبی از حالت‌های بالا را داشته باشیم؛ یعنی فایل‌ها از **فیلدهای مختلف** با **تعداد متفاوت** ارسال شوند (تولید آبجکت `req.files` که نام فیلدها کلیدهای آن هستند).
+
+از آنجایی که ما همزمان یک فایل برای کاور (`imageCover`) و چند فایل برای گالری (`images`) داریم، باید از حالت سوم استفاده کنیم:
+
+```javascript
+// Configuration for multiple fields upload
+exports.uploadTourImages = upload.fields([
+  { name: 'imageCover', maxCount: 1 },
+  { name: 'images', maxCount: 3 },
+]);
+```
+
+### 3. تزریق میدل‌ورها به زنجیره‌ی مسیرها (`Route Stack`)
+
+این میدل‌ور را به همراه میدل‌ور بعدی (که وظیفه ریسایز کردن را دارد) به مسیر ویرایش تور (`PATCH /:id`) در فایل `tourRoutes.js` اضافه می‌کنیم. این مسیر از قبل دارای لایه‌های امنیتی `protect` و `restrictTo` است.
+
+```javascript
+// Adding upload middlewares to the tour update route
+router.patch(
+  '/:id',
+  authController.protect,
+  authController.restrictTo('admin', 'lead-guide'),
+  tourController.uploadTourImages,
+  tourController.resizeTourImages,
+  tourController.updateTour,
+);
+```
+
+### 4. کالبدشکافی درخواست در Postman و شیء `req.files`
+
+برای تست این معماری پیچیده در `Postman`، ابتدا باید به عنوان `admin` لاگین کنیم و سپس در تب `Body` (با فرمت `form-data`) فیلدهای زیر را بسازیم:
+
+- 🔹 یک کلید از نوع `File` با نام `imageCover` (انتخاب یک عکس).
+- 🔹 سه کلید از نوع `File` با نام یکسان `images` (انتخاب سه عکس متفاوت برای هر کدام).
+
+> 🛡️ **تله‌ی برنامه‌نویسی (`Debugging Pitfall`):**
+> هنگام استفاده از `upload.fields`، خروجی در `req.files` ذخیره می‌شود (دقت کنید که کلید `s` دارد)، نه در `req.file`. نکته مهم‌تر این است که در این حالت، حتی اگر ویژگی `maxCount` برای یک فیلد برابر با 1 باشد (مثل `imageCover`)، `Multer` باز هم خروجی آن را به صورت **یک آرایه** برمی‌گرداند.
+
+```javascript
+// Example of req.files output in the server
+{
+  imageCover: [
+    {
+      fieldname: 'imageCover',
+      originalname: 'tour-1-cover.jpg',
+      mimetype: 'image/jpeg',
+      buffer: <Buffer ...>
+    }
+  ],
+  images: [
+    { fieldname: 'images', originalname: 'tour-1-1.jpg', buffer: <Buffer ...> },
+    { fieldname: 'images', originalname: 'tour-1-2.jpg', buffer: <Buffer ...> },
+    { fieldname: 'images', originalname: 'tour-1-3.jpg', buffer: <Buffer ...> }
+  ]
+}
+
+```
+
+در بخش بعدی، با استفاده از این بافرها (`Buffers`)، یک سیستم پردازشی پیشرفته را با پکیج `Sharp` پیاده‌سازی می‌کنیم تا بتوانیم تمام این تصاویر را به صورت همزمان، با فرمت `Landscape` (مستطیلی) تغییر اندازه داده و ذخیره کنیم.
