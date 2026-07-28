@@ -307,8 +307,8 @@ photo: {
 - 🔹 **دسترسی به فایل:** با این تغییر، تصویر آپلود شده به صورت یک بافر (`Buffer`) در ویژگی `req.file.buffer` در دسترس ما خواهد بود.
 
 ```javascript
-// تغییر استراتژی ذخیره‌سازی از دیسک به حافظه
 const multerStorage = multer.memoryStorage();
+// تغییر استراتژی ذخیره‌سازی از دیسک به حافظه
 ```
 
 ---
@@ -365,7 +365,6 @@ exports.resizeUserPhoto = catchAsync(async (req, res, next) => {
 - 🔹 **ترتیب اجرا:** این میدل‌ور باید حتماً بعد از `uploadUserPhoto` (که فایل را دریافت می‌کند) و قبل از `updateMe` (که اطلاعات را در دیتابیس ذخیره می‌کند) قرار بگیرد.
 
 ```javascript
-// فایل userRoutes.js
 router.patch(
   '/updateMe',
   userController.uploadUserPhoto,
