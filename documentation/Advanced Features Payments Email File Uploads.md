@@ -43,12 +43,7 @@ const upload = multer({ dest: 'public/img/users' });
 - 🔹 **نام فیلد فرم:** ورودی متد `single` (در اینجا کلمه `photo`)، دقیقاً همان نام فیلدی است که فرمِ سمت کلاینت، فایل را درون آن قرار داده و به سرور ارسال می‌کند.
 
 ```javascript
-// ادغام میدل‌ور آپلود در مسیر آپدیت پروفایل کاربر
-router.patch(
-  '/updateMe',
-  upload.single('photo'), // میدل‌ور دریافت فایل
-  userController.updateMe,
-);
+router.patch('/updateMe', upload.single('photo'), userController.updateMe);
 ```
 
 ---
