@@ -611,10 +611,10 @@ router.patch(
 
 ```javascript
 exports.resizeTourImages = catchAsync(async (req, res, next) => {
-  // بررسی وجود فایل برای هر دو فیلد کاور و گالری
+  // Check if there are no images to process
   if (!req.files.imageCover || !req.files.images) return next();
 
-  // ادامه منطق پردازش...
+  // Continue processing...
 });
 ```
 
@@ -629,7 +629,7 @@ exports.resizeTourImages = catchAsync(async (req, res, next) => {
 - 🔹 **عملیات تغییر اندازه:** با استفاده از `sharp` تصویر را به ابعاد 2000 در 1333 پیکسل (نسبت استاندارد 3 به 2) تغییر داده و با فرمت `jpeg` ذخیره می‌کنیم.
 
 ```javascript
-// 1) پردازش تصویر کاور
+// 1) Cover image
 req.body.imageCover = `tour-${req.params.id}-${Date.now()}-cover.jpeg`;
 
 await sharp(req.files.imageCover[0].buffer)
@@ -653,12 +653,12 @@ await sharp(req.files.imageCover[0].buffer)
 - 🔹 **تزریق به آرایه بدنه:** ابتدا یک آرایه خالی درون `req.body.images` می‌سازیم و سپس در هر تکرار حلقه، نام فایل جدید را به درون این آرایه پوش (`push`) می‌کنیم.
 
 ```javascript
-// 2) پردازش تصاویر گالری تور
+// 2) Images
 req.body.images = [];
 
 await Promise.all(
   req.files.images.map(async (file, i) => {
-    // تولید نام با استفاده از اندیس حلقه (i + 1)
+    // Generate filename using index (i + 1)
     const filename = `tour-${req.params.id}-${Date.now()}-${i + 1}.jpeg`;
 
     await sharp(file.buffer)
@@ -667,12 +667,12 @@ await Promise.all(
       .jpeg({ quality: 90 })
       .toFile(`public/img/tours/${filename}`);
 
-    // اضافه کردن نام فایل پردازش شده به آرایه بدنه درخواست
+    // Push the processed filename to the body array
     req.body.images.push(filename);
   }),
 );
 
-// فراخوانی میدل‌ور بعدی تنها پس از اتمام تمامی پردازش‌ها
+// Call the next middleware only after all processing is done
 next();
 ```
 
