@@ -116,8 +116,8 @@ exports.updateMe = catchAsync(async (req, res, next) => {
 - 🔹 **استخراج پسوند فایل (`Extension`):** برای به دست آوردن پسوند، ویژگی `mimetype` از آبجکت فایل (مثلاً `image/jpeg`) را با استفاده از متد `split` از روی کاراکتر اسلش (`/`) به یک آرایه تبدیل کرده و عنصر دوم (اندیس 1) را انتخاب می‌کنیم.
 
 ```javascript
-// پیاده‌سازی تنظیمات ذخیره‌سازی
 const multerStorage = multer.diskStorage({
+  // پیاده‌سازی تنظیمات ذخیره‌سازی
   destination: (req, file, cb) => {
     cb(null, 'public/img/users');
   },
