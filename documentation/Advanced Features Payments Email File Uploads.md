@@ -141,8 +141,8 @@ const multerStorage = multer.diskStorage({
 - 🔹 **رد کردن فایل:** اگر فایل تصویر نبود، یک ارور از نوع `AppError` با کد 400 (`Bad Request`) می‌سازیم و آن را همراه با مقدار `false` به تابع کال‌بک پاس می‌دهیم.
 
 ```javascript
-// پیاده‌سازی فیلتر تصاویر
 const multerFilter = (req, file, cb) => {
+  // پیاده‌سازی فیلتر تصاویر
   if (file.mimetype.startsWith('image')) {
     cb(null, true);
   } else {
@@ -158,8 +158,8 @@ const multerFilter = (req, file, cb) => {
 اکنون متغیرهای `multerStorage` و `multerFilter` را درون تنظیمات اصلی `multer` تزریق می‌کنیم. در نهایت، با استفاده از متد `upload.single('photo')` این میدل‌ور را به عنوان `uploadUserPhoto` خروجی می‌گیریم تا در روتر از آن استفاده شود.
 
 ```javascript
-// ساخت میدل‌ور نهایی آپلود
 const upload = multer({
+  // ساخت میدل‌ور نهایی آپلود
   storage: multerStorage,
   fileFilter: multerFilter,
 });
