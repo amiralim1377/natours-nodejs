@@ -251,11 +251,11 @@ exports.updateMe = catchAsync(async (req, res, next) => {
 - 🔹 **ویرایش مدل دیتابیس:** به فایل مدل کاربر می‌رویم و برای ویژگی `photo` یک مقدار پیش‌فرض به نام `default.jpg` تنظیم می‌کنیم.
 
 ```javascript
-// فایل: userModel.js
 photo: {
   type: String,
   default: 'default.jpg',
 },
+  // فایل: userModel.js
 
 ```
 
