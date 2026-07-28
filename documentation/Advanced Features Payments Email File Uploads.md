@@ -418,11 +418,9 @@ router.patch(
 - 🔹 **ترفند طراحی با `label`:** به صورت پیش‌فرض، دکمه‌ی انتخاب فایل در مرورگرها ظاهر جذابی ندارد. ما دکمه اصلی را با `CSS` مخفی می‌کنیم و با استفاده از ویژگی `for='photo'` در تگ `label`، کاری می‌کنیم که کلیک روی متنِ لیبل، پنجره‌ی انتخاب فایل را باز کند.
 
 ```pug
-//- فایل account.pug
 .form__group.form__photo-upload
   img.form__user-photo(src=`/img/users/${user.photo}`, alt='User photo')
 
-  //- اینپوت اختصاصی برای دریافت تصویر
   input.form__upload(type='file', accept='image/*', id='photo', name='photo')
   label(for='photo') Choose new photo
 
@@ -470,8 +468,8 @@ if (userDataForm) {
 - 🔹 **هوشمندی کتابخانه `Axios`:** یکی از مزایای بزرگ استفاده از کتابخانه `Axios` این است که وقتی یک شیء از نوع `FormData` را به عنوان محتوای درخواست (`data`) به آن می‌دهیم، به صورت خودکار هدرِ `Content-Type` را روی `multipart/form-data` تنظیم می‌کند و نیازی به پیکربندی دستیِ هدرها نداریم.
 
 ```javascript
-// تابع مربوط به ارتباط با API
 export const updateSettings = async (data, type) => {
+  // تابع مربوط به ارتباط با API
   try {
     const url =
       type === 'password'
