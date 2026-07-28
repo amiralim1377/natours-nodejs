@@ -6,6 +6,7 @@
   "author": "amirali moradinia",
   "type": "commonjs",
   "main": "index.js",
+  "module": "commonjs",
   "scripts": {
     "start": "nodemon server.js",
     "start:prod": "set NODE_ENV=production && node server.js",
@@ -47,5 +48,8 @@
   },
   "engines": {
     "node": ">=20"
+  },
+  "parserOptions": {
+    "sourceType": "module"
   }
 }
