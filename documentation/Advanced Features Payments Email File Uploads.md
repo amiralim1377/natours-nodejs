@@ -1195,3 +1195,114 @@ SENDGRID_PASSWORD=your_super_secret_generated_api_key_here
                                         8. Create Booking in DB <─────────── 7. Send Webhook (Success)
 
 ```
+
+---
+
+## فصل 13: ایجاد نشست پرداخت با Stripe (`Checkout Session`)
+
+در این بخش، یکی از مهم‌ترین گام‌های توسعه سیستم پرداخت را برمی‌داریم. هدف این است که یک مسیر (`Route`) جدید ایجاد کنیم تا زمانی که کاربر درخواست خرید یک تور را ارسال کرد، بک‌اند ما با سرورهای `Stripe` ارتباط برقرار کرده و یک "نشست پرداخت" (`Checkout Session`) ایمن را ایجاد و به کلاینت برگرداند.
+
+---
+
+### 🗂️ 1. سازمان‌دهی مسیرها و کنترلرهای رزرو (`Booking Structure`)
+
+از آنجا که سیستم رزرو (`Booking`) یک ماهیت کاملاً مستقل در اپلیکیشن ماست، باید ساختار فایل‌های اختصاصی خود را داشته باشد.
+
+- 🔹 **ایجاد روتر و کنترلر:** فایل‌های `bookingRoutes.js` و `bookingController.js` را ایجاد می‌کنیم. ساختار کلی این فایل‌ها بسیار شبیه به سایر موجودیت‌ها (مثل `Review` یا `Tour`) است.
+- 🔹 **ثبت در فایل اصلی (`app.js`):** این روتر جدید را در فایل اصلیِ برنامه، در کنار سایر مسیرهای `API` ثبت می‌کنیم.
+
+```javascript
+// In app.js
+const bookingRouter = require('./routes/bookingRoutes');
+app.use('/api/v1/bookings', bookingRouter);
+```
+
+- 🔹 **ایجاد مسیرِ نشست پرداخت:** در فایل `bookingRoutes.js`، مسیری از نوع `GET` با نام `/checkout-session/:tourId` ایجاد می‌کنیم. این مسیر بر خلاف معماریِ استانداردِ `REST`، برای ساخت و دریافت منابع دیتابیس نیست، بلکه منحصراً وظیفه‌ی دریافت `Session` از درگاه پرداخت را دارد. این مسیر با استفاده از میدل‌ورِ امنیتی، صرفاً برای کاربرانِ لاگین‌شده (`protect`) در دسترس است.
+
+---
+
+### ⚙️ 2. پیاده‌سازی کنترلر پرداخت (`Checkout Session Controller`)
+
+هسته‌ی اصلی این بخش در فایل `bookingController.js` نوشته می‌شود. قبل از هر کاری، باید پکیج اختصاصی `Stripe` را در نودجی‌اس نصب کنیم: `npm install stripe`.
+
+> 💡 **نکته امنیتی (مقداردهی Stripe):**
+> فراخوانی پکیج `stripe` در بک‌اند، بلافاصله یک تابع برمی‌گرداند. شما باید کلید مخفیِ (`Secret Key`) خود را (که قبلاً در فایل `config.env` ذخیره کرده‌اید) مستقیماً به این تابع پاس دهید تا شیءِ احرازِ هویت‌شده‌ی `Stripe` ساخته شود.
+
+در متد `getCheckoutSession`، فرآیند را در سه گام اصلی پیاده می‌کنیم:
+
+#### گام اول: یافتن تور مورد نظر
+
+ابتدا بر اساس آیدی ارسال شده در مسیر (`req.params.tourId`)، اطلاعات کامل تور (مثل نام، قیمت و تصویر) را از دیتابیس استخراج می‌کنیم.
+
+#### گام دوم: ساخت نشست پرداخت با `Stripe`
+
+با فراخوانی `stripe.checkout.sessions.create` یک نشست جدید در سرورهای استرایپ می‌سازیم. این متد یک آبجکت عظیم شامل دو بخش اصلی می‌گیرد:
+
+1. **اطلاعات نشست (`Session Info`):**
+
+- `payment_method_types`: متدهای مجاز برای پرداخت (فعلاً فقط `card`).
+- `success_url`: آدرسی که کاربر پس از خرید موفقیت‌آمیز به آن هدایت می‌شود (فعلاً آدرس صفحه اصلی).
+- `cancel_url`: آدرسی که در صورت انصراف از خرید، کاربر به آن بازمی‌گردد (آدرس صفحه جزئیات همان تور).
+- `customer_email`: ایمیل کاربر (که از `req.user.email` می‌گیریم تا کاربر مجبور به تایپ مجددِ آن در فرم پرداخت نباشد).
+- `client_reference_id`: فیلد بسیار مهم برای ارجاع اطلاعات. ما `tourId` را در این فیلد قرار می‌دهیم تا پس از پرداخت موفق و در مرحله‌ی `Webhook`، بدانیم که این تراکنش دقیقاً مربوط به خرید کدام تور بوده است.
+
+2. **اطلاعات محصول (`Product Info / line_items`):**
+
+- در این بخش نام تور، توضیحات کوتاه (`summary`)، تعداد درخواستی (`quantity`) و ارز مورد نظر (`currency: 'usd'`) را تنظیم می‌کنیم.
+- `images`: تصاویر محصولات برای پردازش در `Stripe` باید به صورت لینک واقعی (`Live URL`) روی اینترنت در دسترس باشند (لینک‌های سیستم `localhost` پذیرفته نمی‌شوند).
+- `amount`: استرایپ قیمت‌ها را بر حسب "سنت" (`Cents`) محاسبه می‌کند، بنابراین قیمت اصلی تور را باید ضربدر 100 کنیم.
+
+#### گام سوم: ارسال نشست به کلاینت
+
+نشستِ تولید شده توسط استرایپ را با وضعیت موفقیت‌آمیز (`200 OK`) در قالب یک ریسپانسِ `JSON` به سمت کلاینت می‌فرستیم.
+
+```javascript
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const Tour = require('../models/tourModel');
+const catchAsync = require('../utils/catchAsync');
+
+exports.getCheckoutSession = catchAsync(async (req, res, next) => {
+  // 1) Get the currently booked tour
+  const tour = await Tour.findById(req.params.tourId);
+
+  // 2) Create checkout session
+  const session = await stripe.checkout.sessions.create({
+    payment_method_types: ['card'],
+    success_url: `${req.protocol}://${req.get('host')}/`,
+    cancel_url: `${req.protocol}://${req.get('host')}/tour/${tour.slug}`,
+    customer_email: req.user.email,
+    client_reference_id: req.params.tourId,
+    line_items: [
+      {
+        name: `${tour.name} Tour`,
+        description: tour.summary,
+        images: [`https://www.natours.dev/img/tours/${tour.imageCover}`], // Needs to be live URL
+        amount: tour.price * 100, // Amount expected in cents
+        currency: 'usd',
+        quantity: 1,
+      },
+    ],
+  });
+
+  // 3) Send session to client
+  res.status(200).json({
+    status: 'success',
+    session,
+  });
+});
+```
+
+---
+
+### 🛡️ 3. تله‌های برنامه‌نویسی و فرآیند دیباگینگ (`Debugging Pitfalls`)
+
+هنگام پیاده‌سازی و تست این مرحله در ابزار `Postman`، مدرس با چالش‌های ریز اما دردسرسازی مواجه شد:
+
+- 🎯 **عدم تطابق نام پارامترهای مسیر (`Param Typo`):** در ابتدا مقدار تور برابر با `null` بازگشت داده شد، زیرا نام پارامتر در مسیر با حروف بزرگ (`:tourID`) نوشته شده بود، اما در کنترلر با حروف کوچک (`req.params.tourId`) فراخوانی می‌شد. دقت در نگارش `camelCase` بسیار حیاتی است.
+- 🎯 **خطای اشتباه تایپی در ساختار استرایپ:** متد ساخت نشست باید دقیقاً به شکل `stripe.checkout.sessions.create` (کلمه `sessions` به صورت جمع) نوشته شود.
+- 🎯 **خطای خواندن مقادیر (`slug of null`):** زمانی رخ داد که به دلیل مشکل پارامترِ بالا، سیستم نتوانسته بود تور را در دیتابیس پیدا کند و به طبعِ آن نتوانست ویژگیِ `slug` را برای تولید مسیرِ `cancel_url` استخراج کند.
+
+با رفع این خطاها و ارسال موفقیت‌آمیزِ درخواست از طریق یک کاربر معتبر، `Session` کامل و کدگذاری‌شده از `Stripe` بازگردانده می‌شود.
+
+> 💡 **چشم‌انداز معماری (Incomplete Payments):**
+> اگر پس از دریافت `Session`، به داشبورد اصلی `Stripe` مراجعه کنید، یک رکورد پرداخت برای آن تور مشاهده می‌کنید که در وضعیت **"ناتمام" (`Incomplete`)** قرار دارد. دلیل این امر این است که ما هنوز در سمت کلاینت (فرانت‌اند)، کاربر را به صفحه رسمی و امن `Stripe Checkout` برای وارد کردن اطلاعات کارت منتقل نکرده‌ایم. این دقیقاً همان چیزی است که در جلسه بعدی پیاده‌سازی خواهد شد!
