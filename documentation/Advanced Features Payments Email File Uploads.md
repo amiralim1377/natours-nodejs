@@ -958,8 +958,8 @@ exports.signup = catchAsync(async (req, res, next) => {
 - 🔹 **متد `sendPasswordReset`:** یک متد جدید در کلاس `Email` می‌سازیم. این متد، تابع مادر (`this.send`) را فراخوانی کرده و دو آرگومانِ ثابت را به آن پاس می‌دهد: یکی نام فایل قالب (`passwordReset`) و دیگری یک موضوعِ جذاب برای ایمیل (`Your password reset token`).
 
 ```javascript
-  // درون فایل email.js
   async sendPasswordReset() {
+    // درون فایل email.js
     await this.send(
       'passwordReset',
       'Your password reset token (valid for only 10 minutes)',
@@ -978,8 +978,8 @@ exports.signup = catchAsync(async (req, res, next) => {
 - 🔹 **جایگزینی متد ارسال:** کدهای ارسال ایمیل قبلی را کاملاً پاک کرده و کلاس `Email` را با پاس دادن `user` (کاربری که درخواست داده) و `resetURL`، جایگزین می‌کنیم.
 
 ```javascript
-// درون فایل authController.js
 exports.forgotPassword = catchAsync(async (req, res, next) => {
+  // درون فایل authController.js
   // 1. پیدا کردن کاربر از روی ایمیل ارسال شده در درخواست
   const user = await User.findOne({ email: req.body.email });
   if (!user) {
