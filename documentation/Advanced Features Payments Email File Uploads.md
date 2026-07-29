@@ -1638,3 +1638,92 @@ li
 - 🔹 **اثر مخرب:** در فریم‌ورک اکسپرس و پایگاه داده مونگوس، هر میدل‌وری وظیفه دارد پس از اتمام کارش، تابع `next()` را فراخوانی کند تا سیستم به مرحله بعدی برود. فراموش کردن این تابع باعث می‌شود کل فرآیند اجرای برنامه در همان نقطه متوقف (فریز) شود و سرور هیچ پاسخی به کلاینت ندهد.
 
 با اضافه کردن `next()` به انتهای آن میدل‌ور، مشکل برطرف شد و صفحه با موفقیت تورهای رزرو شده را نمایش داد.
+---
+
+## فصل 17: تکمیل ساختار API برای سیستم رزرو (Bookings CRUD)
+
+در این بخش از توسعه، سیستم درگاه‌های ارتباطی یا `API` را برای مدیریت رزروها به اتمام می‌رسانیم. هدف اصلی ما ایجاد تمام عملیات‌های استانداردِ `CRUD` (شامل ساخت، خواندن، بروزرسانی و حذف) برای مدل `Booking` است تا مدیران سیستم بتوانند رزروها را کنترل کنند.
+
+### ⚙️ 1. پیاده‌سازی کنترلرها با استفاده از الگوی Factory
+
+برای جلوگیری از تکرار کد و حفظ یکپارچگی معماری، به جای نوشتن دستیِ کنترلرها، از توابع کارخانه‌ای (`Factory Functions`) که در فصل‌های قبل طراحی کرده بودیم استفاده می‌کنیم.
+
+- 🔹 **کاهش کدهای تکراری:** توابعی مانند `factory.getAll` یا `factory.updateOne` را فراخوانی کرده و مدل `Booking` را به عنوان آرگومان به آن‌ها پاس می‌دهیم تا تمام فرآیندهای دیتابیس به صورت خودکار مدیریت شوند.
+- 🔹 **پوشش تمام نیازها:** دقیقاً 5 متد اصلی برای دریافت همه رزروها، دریافت یک رزرو، ایجاد، ویرایش و حذف ساخته می‌شود.
+
+```javascript
+// File: bookingController.js
+const factory = require('./handlerFactory');
+const Booking = require('../models/bookingModel');
+
+exports.getAllBookings = factory.getAll(Booking);
+exports.getBooking = factory.getOne(Booking);
+exports.createBooking = factory.createOne(Booking);
+exports.updateBooking = factory.updateOne(Booking);
+exports.deleteBooking = factory.deleteOne(Booking);
+```
+
+### 🛡️ 2. معماری مسیرها و لایه‌های دسترسی
+
+در فایل `bookingRoutes.js`، مسیرهای پایه (`/`) و مسیرهای دارای آیدی (`/:id`) را تعریف کرده و لایه‌های امنیتی را روی آن‌ها اعمال می‌کنیم.
+
+- 🔹 **اعمال امنیت سراسری (`Protect`):** از آنجا که تمام مسیرهای سیستم رزرو به احراز هویت نیاز دارند، میدل‌ور `protect` را در بالاترین سطحِ روتر (`router.use`) قرار می‌دهیم. با این ترفند، این لایه امنیتی به طور خودکار روی تمام مسیرهای پایین‌تر اعمال می‌شود.
+- 🔹 **محدودسازی دسترسی (`RestrictTo`):** مدیریت رزروها در سیستم (ویرایش و حذف) فقط باید توسط نقش‌های `admin` و `lead-guide` انجام شود. بنابراین میدل‌ور محدودکننده را نیز به صورت سراسری اِعمال می‌کنیم.
+
+```javascript
+// File: bookingRoutes.js
+const express = require('express');
+const bookingController = require('../controllers/bookingController');
+const authController = require('../controllers/authController');
+
+const router = express.Router();
+
+// Apply authentication to all routes below this line
+router.use(authController.protect);
+
+// Apply role restriction to all routes below this line
+router.use(authController.restrictTo('admin', 'lead-guide'));
+
+router
+  .route('/')
+  .get(bookingController.getAllBookings)
+  .post(bookingController.createBooking);
+
+router
+  .route('/:id')
+  .get(bookingController.getBooking)
+  .patch(bookingController.updateBooking)
+  .delete(bookingController.deleteBooking);
+
+module.exports = router;
+```
+
+### 🎯 3. تست و بررسی در نرم‌افزار Postman
+
+برای اطمینان از عملکرد صحیح مسیرها، عملیات تست را در محیط `Postman` انجام می‌دهیم.
+
+- 🔹 **ورود مدیر:** ابتدا باید با حساب کاربری یک مدیر (مثلاً `admin@natours.io`) وارد سیستم شویم تا توکنِ (`Token`) معتبر دریافت کنیم.
+- 🔹 **بررسی واکشی اطلاعات:** پس از ارسال درخواست به مسیر `getAllBookings`، مشاهده می‌کنیم که به دلیل ساختار مدل ما، اطلاعاتِ `user` و `tour` به صورت خودکار در خروجی واکشی (`Populate`) شده‌اند.
+- 🔹 **سازمان‌دهی مستندات:** در نهایت، درخواست‌های مربوط به رزرو را در پوشه‌ای جدید به نام `Bookings` ذخیره می‌کنیم تا ساختار محیط کاری `Postman` مرتب و استاندارد باقی بماند.
+
+> 💡 **نکته طلایی معماری در Mongoose:**
+> فرایند `Populate` شدنِ همزمانِ اطلاعات کاربر، تور و راهنمایان، معمولاً پردازش سنگینی برای دیتابیس است. اما از آنجا که این کوئریِ خاص (دریافت تمام رزروها) فقط توسط مدیران سیستم و در پنل مدیریت اجرا می‌شود و بار ترافیکی بالایی ندارد، مشکل و افت عملکرد (`Performance Drop`) خاصی برای اپلیکیشن ما ایجاد نمی‌کند.
+
+### 🗺️ دیاگرام جریان دسترسی به API رزروها
+
+```text
+[ Client API Request ]
+           │
+           ▼
+[ 1. authController.protect ] ────────> (Check if user is logged in)
+           │
+           ▼
+[ 2. authController.restrictTo ] ─────> (Check if role is admin/lead-guide)
+           │
+           ▼
+[ 3. bookingController ] ─────────────> (Handle CRUD via Factory pattern)
+           │
+           ▼
+[ 4. MongoDB Database ] ──────────────> (Execute queries and Populate data)
+
+```
